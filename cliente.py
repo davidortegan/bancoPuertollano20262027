@@ -23,6 +23,7 @@ def leerFichero(numCliente):
     # Registro el inicio de la carga antes de abrir el fichero
     log.escribir("INFO", f"Inicio de la carga del cliente {numCliente}")
     cliente = Cliente(numCliente)
+    movimientos_procesados = 0
 
     try:
         with open(f"ficherosClientes/{numCliente}.txt", "r") as f:
@@ -45,15 +46,19 @@ def leerFichero(numCliente):
 
                 if destino == "Cuenta" and operacion == "Ingreso":
                     cliente.cuenta.ingresar(cantidad)
+                    movimientos_procesados += 1
 
                 elif destino == "Cuenta" and operacion == "Retirada":
                     cliente.cuenta.retirar(cantidad)
+                    movimientos_procesados += 1
 
                 elif destino == "Deposito" and operacion == "Ingreso":
                     cliente.deposito.ingresar(cantidad)
+                    movimientos_procesados += 1
 
                 elif destino == "Deposito" and operacion == "Retirada":
                     cliente.deposito.retirar(cantidad)
+                    movimientos_procesados += 1
 
                 else:
                     log.escribir("WARNING", f"Operación o destino desconocido en la línea: {linea.strip()}")
@@ -65,7 +70,9 @@ def leerFichero(numCliente):
 
         # Confirmo en el log que el fichero se ha procesado sin problemas
         log.escribir("INFO", f"Cliente {numCliente} cargado correctamente")
+        log.escribir("INFO", f"Movimientos procesados: {movimientos_procesados}")
         print("Datos del cliente cargados correctamente")
+        print(f"Movimientos procesados: {movimientos_procesados}")
 
         # Muestro el resumen final sacando los datos directamente desde los getters de Cliente
         print(f"Cliente: {cliente.getNumero()}")
