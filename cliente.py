@@ -20,7 +20,10 @@ def cargarCliente(tipo):
 
 def leerFichero(numCliente):
 
+    # Registro el inicio de la carga antes de abrir el fichero
+    log.escribir("INFO", f"Inicio de la carga del cliente {numCliente}")
     cliente = Cliente(numCliente)
+    movimientos_procesados = 0
 
     try:
         with open(f"ficherosClientes/{numCliente}.txt", "r") as f:
@@ -31,32 +34,56 @@ def leerFichero(numCliente):
 
                 datos = linea.strip().split(";")
 
-                cantidad = float(datos[0])
+                try:
+                    cantidad = float(datos[0])
+                except ValueError:
+                    log.escribir("ERROR", f"Cantidad incorrecta en la línea: {linea.strip()}")
+                    linea = f.readline()
+                    continue
+
                 operacion = datos[1]
                 destino = datos[2]
 
                 if destino == "Cuenta" and operacion == "Ingreso":
                     cliente.cuenta.ingresar(cantidad)
+                    movimientos_procesados += 1
 
                 elif destino == "Cuenta" and operacion == "Retirada":
                     cliente.cuenta.retirar(cantidad)
+                    movimientos_procesados += 1
 
                 elif destino == "Deposito" and operacion == "Ingreso":
                     cliente.deposito.ingresar(cantidad)
+                    movimientos_procesados += 1
 
                 elif destino == "Deposito" and operacion == "Retirada":
                     cliente.deposito.retirar(cantidad)
+                    movimientos_procesados += 1
+
+                else:
+                    log.escribir("WARNING", f"Operación o destino desconocido en la línea: {linea.strip()}")
 
                 linea = f.readline()
 
         # Guardamos el estado final del cliente
         cliente.guardar()
 
+        # Confirmo en el log que el fichero se ha procesado sin problemas
+        log.escribir("INFO", f"Cliente {numCliente} cargado correctamente")
+        log.escribir("INFO", f"Movimientos procesados: {movimientos_procesados}")
         print("Datos del cliente cargados correctamente")
+        print(f"Movimientos procesados: {movimientos_procesados}")
+
+        # Muestro el resumen final sacando los datos directamente desde los getters de Cliente
+        print(f"Cliente: {cliente.getNumero()}")
+        print(f"Saldo cuenta: {cliente.getCuenta().getSaldo()} €")
+        print(f"Saldo depósito: {cliente.getDeposito().getSaldo()} €")
 
         return cliente
 
     except FileNotFoundError:
+        # Si no existe el archivo del cliente, dejo constancia como ERROR
+        log.escribir("ERROR", f"Fichero de movimientos inexistente para el cliente {numCliente}")
         print("El usuario no tiene ninguna cuenta con el banco")
         return None
 
@@ -65,15 +92,13 @@ def cargarClienteGuardado(numCliente):
 
     try:
         with open(f"datosClientes/{numCliente}.txt", "r") as f:
+            numero = f.readline().strip()
+            saldo_cuenta = f.readline().strip()
+            saldo_deposito = f.readline().strip()
 
-            linea = f.readline()
-            datos = linea.split(";")
-
-            cliente = Cliente(datos[0])
-
-            cliente.cuenta.saldo = float(datos[1])
-            cliente.deposito.saldo = float(datos[2])
-
+            cliente = Cliente(numero)
+            cliente.cuenta.saldo = float(saldo_cuenta)
+            cliente.deposito.saldo = float(saldo_deposito)
             return cliente
 
     except FileNotFoundError:
